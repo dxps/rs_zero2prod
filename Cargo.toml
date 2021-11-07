@@ -8,7 +8,7 @@ version = "0.1.0"
 path = "src/lib.rs"
 
 [[bin]]
-name = "rs_zero2prod"
+name = "ztp-rs"
 path = "src/main.rs"
 
 [dependencies]

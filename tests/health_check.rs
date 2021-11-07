@@ -42,9 +42,11 @@ async fn subscribe_returns_400_when_missing_data() {
     let address = spawn_app();
     let client = reqwest::Client::new();
 
+    // Using a table-driven test.
     let test_cases = vec![
         ("name=Joe%20Black", "email missing"),
         ("email=joe@black.com", "name missing"),
+        ("", "both email and name missing"),
     ];
 
     for (invalid_body, error_msg) in test_cases {
@@ -56,9 +58,19 @@ async fn subscribe_returns_400_when_missing_data() {
             .send()
             .await
             .expect("Failed to post request");
-        
-        assert_eq!(400, response.status().as_u16(),
-         "The API did not fail with 400 when response body was {}", error_msg);
+
+        println!(
+            "For body: \"{}\" got response: status:{}",
+            invalid_body,
+            response.status()
+        );
+
+        assert_eq!(
+            400,
+            response.status().as_u16(),
+            "The API did not fail with 400 when request body has {}",
+            error_msg
+        );
     }
 }
 
