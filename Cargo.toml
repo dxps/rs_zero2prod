@@ -14,7 +14,21 @@ path = "src/main.rs"
 [dependencies]
 actix-http = "3.0.0-beta.11"
 actix-web = "4.0.0-beta.10"
+chrono = "0.4.19"
 serde = {version = "1", features = ["derive"]}
+
+# Using table-like toml syntax to avoid a super-long line.
+[dependencies.sqlx]
+default-features = false
+features = [
+  "runtime-actix-rustls", # Use Actix runtime for its future and `rustls` as TLS backend.
+  "macros", # Have access to `sqlx::query!` and `sqlx::query_as!` macros.
+  "postgres", # Have access to Postgres specific features (such as non-standard SQL types).
+  "uuid", # Add support for mapping SQL UUIDs to the Uuid type from `uuid` create.
+  "chrono", # Add support for mapping SQL `timestamptz` to the `DateTime<T>` type of `chrono` crate.
+  "migrate", # Have access to the features used by `sqlx-cli` to manage migrations, useful for our test suite.
+]
+version = "0.5.9"
 
 [dev-dependencies]
 actix-rt = "2"
