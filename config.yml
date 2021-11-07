@@ -3,6 +3,6 @@ database:
   port: 5436
   username: 'postgres'
   password: 'postgres'
-  db_name: 'ztp_newsletter'
+  database_name: 'ztp_newsletter'
 
 http_port: 8000

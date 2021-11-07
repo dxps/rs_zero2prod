@@ -1,5 +1,8 @@
 use std::net::TcpListener;
 
+use rs_zero2prod::config;
+use sqlx::{Connection, PgConnection};
+
 #[actix_rt::test]
 async fn health_check_test() {
     // Setup.
@@ -17,11 +20,18 @@ async fn health_check_test() {
 }
 
 #[actix_rt::test]
-async fn subscribe_returns_200_for_valid_req() {
+async fn subscribe_returns_200_for_valid_form_data() {
     // Setup.
     let address = spawn_app();
-    let client = reqwest::Client::new();
+    let db_conn_string = config::get_config()
+        .expect("Failed to load config")
+        .database
+        .connection_string();
+    let mut db_conn = PgConnection::connect(&db_conn_string)
+        .await
+        .expect("Failed to connect to Postgres");
 
+    let client = reqwest::Client::new();
     let body = "name=Joe%20Black&email=joe%40gmail.com";
 
     // Act.
@@ -34,6 +44,13 @@ async fn subscribe_returns_200_for_valid_req() {
         .expect("Failed to post request");
 
     assert_eq!(200, response.status().as_u16());
+
+    let saved = sqlx::query!("SELECT email, name FROM subscriptions")
+        .fetch_one(&mut db_conn)
+        .await
+        .expect("Failed to fetch saved subscription.");
+    assert_eq!(saved.email, "joe@gmail.com");
+    assert_eq!(saved.name, "Joe Black");
 }
 
 #[actix_rt::test]
