@@ -22,6 +22,14 @@ impl DatabaseSettings {
             self.username, self.password, self.host, self.port, self.database_name
         )
     }
+
+    /// Such a connection string allows connecting to the Postgres instance, not to a specific database.
+    pub fn connection_string_without_db(&self) -> String {
+        format!(
+            "postgres://{}:{}@{}:{}",
+            self.username, self.password, self.host, self.port
+        )
+    }
 }
 
 pub fn get_config() -> Result<AppConfig, config::ConfigError> {
