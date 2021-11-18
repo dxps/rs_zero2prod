@@ -7,7 +7,7 @@
 The following software needs to be installed locally:
 
 - PostgreSQL Client
-  - On Ubuntu distro, use `sudo apt search postgresql-client-13`
+  - On Ubuntu based distros, use `sudo apt search postgresql-client-13`
 - `sqlx-cli`
   - Install it using `cargo install --version=0.5.9 sqlx-cli --no-default-features --features postgres`
 
@@ -18,6 +18,9 @@ The following software needs to be installed locally:
 Before starting up the service, Postgres db access and provisioning must be done.<br/>
 Run `./scripts/init_db` script that starts a PostgreSQL instance as a Docker container and runs the database migrations within.
 If the container is already running, you can skip the container bootstrap using `SKIP_DOCKER=true ./scripts/init_db`.
+
+Start the service using `run.sh` (which it's just a convenince and minimal script for doing `cargo run`,
+enough needed since there is one single binary `[[bin]]` entry into `Cargo.toml` file).
 
 <br/>
 
