@@ -1,7 +1,8 @@
 use std::net::TcpListener;
 
-use rs_zero2prod::config;
-use sqlx::{Connection, PgConnection, PgPool};
+use rs_zero2prod::config::{self, DatabaseSettings};
+use sqlx::{Connection, Executor, PgConnection, PgPool};
+use uuid::Uuid;
 
 #[actix_rt::test]
 async fn health_check_test() {
@@ -10,7 +11,7 @@ async fn health_check_test() {
     let client = reqwest::Client::new();
 
     let response = client
-        .get(format!("{}/health_check", app.http_listening_address))
+        .get(format!("{}/health_check", app.http_address))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -23,20 +24,13 @@ async fn health_check_test() {
 async fn subscribe_returns_200_for_valid_form_data() {
     // Setup.
     let app = spawn_app().await;
-    let db_conn_string = config::get_config()
-        .expect("Failed to load config")
-        .database
-        .connection_string();
-    let mut db_conn = PgConnection::connect(&db_conn_string)
-        .await
-        .expect("Failed to connect to Postgres");
 
     let client = reqwest::Client::new();
     let body = "name=Joe%20Black&email=joe%40gmail.com";
 
     // Act.
     let response = client
-        .post(&format!("{}/subscriptions", &app.http_listening_address))
+        .post(&format!("{}/subscriptions", &app.http_address))
         .header("content-type", "application/x-www-form-urlencoded")
         .body(body)
         .send()
@@ -46,7 +40,7 @@ async fn subscribe_returns_200_for_valid_form_data() {
     assert_eq!(200, response.status().as_u16());
 
     let saved = sqlx::query!("SELECT email, name FROM subscriptions")
-        .fetch_one(&mut db_conn)
+        .fetch_one(&app.db_pool)
         .await
         .expect("Failed to fetch saved subscription.");
     assert_eq!(saved.email, "joe@gmail.com");
@@ -69,7 +63,7 @@ async fn subscribe_returns_400_when_missing_data() {
     for (invalid_body, error_msg) in test_cases {
         // Act.
         let response = client
-            .post(format!("{}/subscriptions", &app.http_listening_address))
+            .post(format!("{}/subscriptions", &app.http_address))
             .header("content-type", "application/x-www-form-urlencoded")
             .body(invalid_body)
             .send()
@@ -92,18 +86,17 @@ async fn subscribe_returns_400_when_missing_data() {
 }
 
 pub struct TestApp {
-    pub http_listening_address: String,
-    pub db_connection_pool: PgPool,
+    pub http_address: String,
+    pub db_pool: PgPool,
 }
 
 /// Spin up an instance of the app (incl. the web server)
 /// and return the initialized elements (listening address and database connection pool).
 async fn spawn_app() -> TestApp {
     // Load the config and init db connection. Panic if this fails.
-    let app_config = config::get_config().expect("Failed to load the app config.");
-    let db_conn = PgPool::connect(&app_config.database.connection_string())
-        .await
-        .expect("Failed to connect to Postgres");
+    let mut app_config = config::get_config().expect("Failed to load the app config.");
+    app_config.database.database_name = Uuid::new_v4().to_string();
+    let db_conn = configure_database(&app_config.database).await;
 
     // Port value of 0 (in "{ip/name}:0") will trigger an OS scan for
     // an available port that can be used for binding (listening to).
@@ -116,7 +109,28 @@ async fn spawn_app() -> TestApp {
     let _ = tokio::spawn(server);
 
     TestApp {
-        http_listening_address: format!("http://127.0.0.1:{}", port),
-        db_connection_pool: db_conn,
+        http_address: format!("http://127.0.0.1:{}", port),
+        db_pool: db_conn,
     }
+}
+
+async fn configure_database(config: &DatabaseSettings) -> PgPool {
+    // Create the database.
+    let mut conn = PgConnection::connect(&config.connection_string_without_db())
+        .await
+        .expect("Failed to connect to Postgres");
+    conn.execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+        .await
+        .expect("Failed to create database");
+
+    // Run the database migrations.
+    let conn_pool = PgPool::connect(&config.connection_string())
+        .await
+        .expect("Failed to connect to Postgres");
+    sqlx::migrate!("./migrations")
+        .run(&conn_pool)
+        .await
+        .expect("Failed to run the database migrations");
+
+    conn_pool
 }
