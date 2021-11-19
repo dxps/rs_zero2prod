@@ -7,6 +7,7 @@ use std::net::TcpListener;
 
 pub fn run(listener: TcpListener, db_conn_pool: PgPool) -> Result<Server, std::io::Error> {
     let conn_pool = web::Data::new(db_conn_pool);
+
     let server = HttpServer::new(move || {
         App::new()
             .route("/health_check", web::get().to(health_check))
@@ -15,5 +16,6 @@ pub fn run(listener: TcpListener, db_conn_pool: PgPool) -> Result<Server, std::i
     })
     .listen(listener)?
     .run();
+
     Ok(server)
 }
