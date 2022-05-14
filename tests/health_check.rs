@@ -95,7 +95,7 @@ pub struct TestApp {
 async fn spawn_app() -> TestApp {
     // Load the config and init db connection. Panic if this fails.
     let mut app_config = config::get_config().expect("Failed to load the app config.");
-    app_config.database.database_name = Uuid::new_v4().to_string();
+    app_config.database.db_name = Uuid::new_v4().to_string();
     let db_conn = configure_database(&app_config.database).await;
 
     // Port value of 0 (in "{ip/name}:0") will trigger an OS scan for
@@ -119,7 +119,7 @@ async fn configure_database(config: &DatabaseSettings) -> PgPool {
     let mut conn = PgConnection::connect(&config.connection_string_without_db())
         .await
         .expect("Failed to connect to Postgres");
-    conn.execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+    conn.execute(format!(r#"CREATE DATABASE "{}";"#, config.db_name).as_str())
         .await
         .expect("Failed to create database");
 
