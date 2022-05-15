@@ -12,14 +12,19 @@ name = "ztp-rs"
 path = "src/main.rs"
 
 [dependencies]
-actix-http = "3.0.0-beta.12"
-actix-web = "4.0.0-beta.11"
+actix-http = "3.0.4"
+actix-web = "4.0.1"
+actix-server = "2.1.1"
+
 chrono = "0.4.19"
-config = "0.11.0"
+config = { version = "0.11", default-features = false, features = ["yaml"] }
+openssl = { version = "0.10", features = ["vendored"] }
 serde = {version = "1", features = ["derive"]}
 uuid = {version = "0.8.2", features = ["v4"]}
 
-# Using table-like toml syntax to avoid a super-long line.
+tokio = "1"
+
+## Using table-like toml syntax to avoid a super-long line.
 [dependencies.sqlx]
 default-features = false
 features = [
@@ -30,9 +35,10 @@ features = [
   "chrono", # Add support for mapping SQL `timestamptz` to the `DateTime<T>` type of `chrono` crate.
   "migrate", # Have access to the features used by `sqlx-cli` to manage migrations, useful for our test suite.
 ]
-version = "0.5.9"
+version = "0.5.13"
+
 
 [dev-dependencies]
 actix-rt = "2"
 reqwest = "0.11"
-tokio = "1"
+# tokio = "1"
