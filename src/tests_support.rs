@@ -4,11 +4,9 @@ use std::{io::Error, net::TcpListener};
 use uuid::Uuid;
 
 pub struct TestApp {
-    // pub server: actix_server::Server,
-    // server_handle: Future<dyn Output = runtime::Result>,
     server_handle: tokio::task::JoinHandle<Result<(), Error>>,
     pub http_endpoint: String,
-    pub db_pool: PgPool,
+    pub db: PgPool,
 }
 
 impl TestApp {
@@ -23,22 +21,21 @@ pub async fn spawn_test_app_db() -> TestApp {
     // Load the config and init db connection. Panic if this fails.
     let mut app_config = crate::config::get_config().expect("Failed to load the app config.");
     app_config.database.name = Uuid::new_v4().to_string();
-    let db_conn = configure_database(&app_config.database).await;
+    let db = configure_database(&app_config.database).await;
 
     // Port value of 0 (in "{ip/name}:0") will trigger an OS scan for
     // an available port that can be used for binding (listening to).
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
     let port = listener.local_addr().unwrap().port();
 
-    let server = crate::startup::run(listener, db_conn.clone()).expect("Failed to bind address");
+    let server = crate::startup::run(listener, db.clone()).expect("Failed to bind address");
     // let _ = tokio::spawn(server);
     let server_handle = tokio::spawn(server);
 
     TestApp {
-        // server,
         server_handle,
         http_endpoint: format!("http://127.0.0.1:{}", port),
-        db_pool: db_conn,
+        db,
     }
 }
 

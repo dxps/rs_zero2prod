@@ -22,6 +22,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 serde = {version = "1", features = ["derive"]}
 uuid = {version = "0.8.2", features = ["v4"]}
 
+# This has to be here instead of just to `dev-dependencies` as it's needed in `tests_support` module.
 tokio = "1"
 
 ## Using table-like toml syntax to avoid a super-long line.
@@ -41,4 +42,3 @@ version = "0.5.13"
 [dev-dependencies]
 actix-rt = "2"
 reqwest = "0.11"
-# tokio = "1"
