@@ -6,13 +6,17 @@ use sqlx::PgPool;
 use std::net::TcpListener;
 
 pub fn run(listener: TcpListener, db_conn_pool: PgPool) -> Result<Server, std::io::Error> {
-    let conn_pool = web::Data::new(db_conn_pool);
+    //
+    // Preparing the database connection pool as part of the *application state*.
+    // This is used in the closure below, used by each request serving thread,
+    // that's why a cloned reference (an `Arc`, included in `web::Data`) is provided.
+    let db_conn_pool = web::Data::new(db_conn_pool);
 
     let server = HttpServer::new(move || {
         App::new()
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscribe))
-            .app_data(conn_pool.clone())
+            .app_data(db_conn_pool.clone())
     })
     .listen(listener)?
     .run();

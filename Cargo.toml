@@ -23,7 +23,7 @@ serde = {version = "1", features = ["derive"]}
 uuid = {version = "0.8.2", features = ["v4"]}
 
 # This has to be here instead of just to `dev-dependencies` as it's needed in `tests_support` module.
-tokio = "1"
+tokio = { version = "1", features = [ "macros", "rt-multi-thread" ] }
 
 ## Using table-like toml syntax to avoid a super-long line.
 [dependencies.sqlx]
