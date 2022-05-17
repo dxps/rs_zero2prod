@@ -1,0 +1,13 @@
+
+## Options are documented at https://rust-lang.github.io/rustfmt/?version=v1.4.38
+## Unfortunately, some of them require nightly Rust, so they won't work on stable.
+
+array_width = 80
+
+edition = "2021"
+
+imports_indent = "Visual"
+
+reorder_impl_items = true
+
+struct_field_align_threshold = 20

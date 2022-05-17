@@ -16,6 +16,7 @@ pub struct DatabaseSettings {
 }
 
 impl DatabaseSettings {
+    /// Get the string used for connecting to the database.
     pub fn connection_string(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}/{}",
@@ -23,7 +24,7 @@ impl DatabaseSettings {
         )
     }
 
-    /// Such a connection string allows connecting to the Postgres instance, not to a specific database.
+    /// Such string allows connecting to the Postgres instance, not to a specific database.
     pub fn connection_string_without_db(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}",
@@ -32,11 +33,12 @@ impl DatabaseSettings {
     }
 }
 
+/// Get the application config.
 pub fn get_config() -> Result<AppConfig, config::ConfigError> {
-    let cfg = config::Config::builder()
+    config::Config::builder()
         // Load the config.(yml|yaml|toml|...) file.
         .add_source(config::File::with_name("config"))
         .build()
-        .unwrap();
-    cfg.try_deserialize()
+        .unwrap()
+        .try_deserialize()
 }
