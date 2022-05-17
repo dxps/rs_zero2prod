@@ -1,6 +1,6 @@
 [package]
 authors = ["dxps <marius.ileana@gmail.com>"]
-edition = "2018"
+edition = "2021"
 name = "rs_zero2prod"
 version = "0.1.0"
 
@@ -17,13 +17,13 @@ actix-web = "4.0.1"
 actix-server = "2.1.1"
 
 chrono = "0.4.19"
-config = { version = "0.13", default-features = false, features = ["yaml"] }
-openssl = { version = "0.10", features = ["vendored"] }
-serde = {version = "1", features = ["derive"]}
+config = { version = "0.13.1", default-features = false, features = ["yaml"] }
+openssl = { version = "0.10.40", features = ["vendored"] }
+serde = {version = "1.0.137", features = ["derive"]}
 uuid = {version = "1.0.0", features = ["v4"]}
 
 # This has to be here instead of just to `dev-dependencies` as it's needed in `tests_support` module.
-tokio = { version = "1", features = [ "macros", "rt-multi-thread" ] }
+tokio = { version = "1.18.2", features = [ "macros", "rt-multi-thread" ] }
 
 ## Using table-like toml syntax to avoid a super-long line.
 [dependencies.sqlx]
@@ -40,5 +40,5 @@ version = "0.5.13"
 
 
 [dev-dependencies]
-actix-rt = "2"
-reqwest = "0.11"
+actix-rt = "2.7.0"
+reqwest = "0.11.10"
