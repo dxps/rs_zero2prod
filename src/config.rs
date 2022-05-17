@@ -33,10 +33,10 @@ impl DatabaseSettings {
 }
 
 pub fn get_config() -> Result<AppConfig, config::ConfigError> {
-    // Init the config reader.
-    let mut cfg = config::Config::default();
-    // Load the config.(yaml|toml|...) file.
-    cfg.merge(config::File::with_name("config"))?;
-
-    cfg.try_into()
+    let cfg = config::Config::builder()
+        // Load the config.(yml|yaml|toml|...) file.
+        .add_source(config::File::with_name("config"))
+        .build()
+        .unwrap();
+    cfg.try_deserialize()
 }

@@ -17,10 +17,10 @@ actix-web = "4.0.1"
 actix-server = "2.1.1"
 
 chrono = "0.4.19"
-config = { version = "0.11", default-features = false, features = ["yaml"] }
+config = { version = "0.13", default-features = false, features = ["yaml"] }
 openssl = { version = "0.10", features = ["vendored"] }
 serde = {version = "1", features = ["derive"]}
-uuid = {version = "0.8.2", features = ["v4"]}
+uuid = {version = "1.0.0", features = ["v4"]}
 
 # This has to be here instead of just to `dev-dependencies` as it's needed in `tests_support` module.
 tokio = { version = "1", features = [ "macros", "rt-multi-thread" ] }
