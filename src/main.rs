@@ -1,11 +1,14 @@
 use std::net::TcpListener;
 
+use env_logger::Env;
 use rs_zero2prod::{config, startup};
 use sqlx::PgPool;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     //
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+
     // Load the config and init db connection. Panic if this fails.
     let app_config = config::get_config().expect("Failed to load the app config.");
 
