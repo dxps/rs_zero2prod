@@ -5,6 +5,7 @@ use crate::{
 use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::{io::Error, net::TcpListener};
+use secrecy::ExposeSecret;
 use uuid::Uuid;
 
 pub struct TestApp {
@@ -61,7 +62,7 @@ impl TestApp {
 
     async fn configure_database(config: &DatabaseSettings) -> (PgConnection, PgPool) {
         // Create the database.
-        let mut conn = PgConnection::connect(&config.connection_string_without_db())
+        let mut conn = PgConnection::connect(&config.connection_string_without_db().expose_secret())
             .await
             .expect("Failed to connect to Postgres");
         conn.execute(format!(r#"CREATE DATABASE "{}";"#, config.name).as_str())
@@ -70,7 +71,7 @@ impl TestApp {
         println!("[TestApp.startup] Created database {}.", config.name);
 
         // Run the database migrations.
-        let conn_pool = PgPool::connect(&config.connection_string())
+        let conn_pool = PgPool::connect(&config.connection_string().expose_secret())
             .await
             .expect("Failed to connect to Postgres");
         sqlx::migrate!("./migrations")
