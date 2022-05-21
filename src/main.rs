@@ -1,16 +1,20 @@
 use std::net::TcpListener;
 
-use env_logger::Env;
-use rs_zero2prod::{config, startup};
+use rs_zero2prod::{
+    config::get_config,
+    startup::run,
+    telemetry::{get_tracing_subscriber, init_tracing_subscriber},
+};
 use sqlx::PgPool;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     //
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+    let ts = get_tracing_subscriber("rs_ztp".into(), "info".into(), std::io::stdout);
+    init_tracing_subscriber(ts);
 
     // Load the config and init db connection. Panic if this fails.
-    let app_config = config::get_config().expect("Failed to load the app config.");
+    let app_config = get_config().expect("Failed to load the app config.");
 
     let db_conn_pool = PgPool::connect(&app_config.database.connection_string())
         .await
@@ -20,5 +24,5 @@ async fn main() -> std::io::Result<()> {
     let listener =
         TcpListener::bind(&endpoint).expect(&format!("Failed to listen on {}.", endpoint));
 
-    startup::run(listener, db_conn_pool)?.await
+    run(listener, db_conn_pool)?.await
 }

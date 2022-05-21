@@ -3,7 +3,6 @@ use std::str::FromStr;
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use sqlx::{types::Uuid as SqlxUuid, PgPool};
-use tracing::Instrument;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
@@ -12,40 +11,47 @@ pub struct FormData {
     name: String,
 }
 
+#[tracing::instrument(
+  name = "Adding new subscriber", skip(form, db_conn),
+  fields(
+    request_id = %Uuid::new_v4(),
+    subscriber_email = %form.email,
+    subscriber_name = %form.name
+  )
+)]
 pub async fn subscribe(form: web::Form<FormData>, db_conn: web::Data<PgPool>) -> HttpResponse {
     //
-    let id = Uuid::new_v4();
-    let request_span = tracing::info_span!("Adding new subscriber.", %id, subscriber_email = %form.email, subscriber_name = %form.name);
-    let query_span = tracing::info_span!("Persisting new subscriber");
-    let row_id = SqlxUuid::from_str(id.to_string().as_str()).unwrap();
-    match sqlx::query!(
+    match insert_subscription(&form, &db_conn).await {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => {
+            // TODO: Better HTTP response in case of a App/Db error.
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+#[tracing::instrument(name = "Persisting new subscription", skip(form, db_cp))]
+async fn insert_subscription(form: &FormData, db_cp: &PgPool) -> Result<(), sqlx::Error> {
+    let row_id = SqlxUuid::from_str(Uuid::new_v4().to_string().as_str()).unwrap();
+    sqlx::query!(
         r#"INSERT INTO subscriptions (id, email, name, subscribed_at) VALUES ($1, $2, $3, $4)"#,
         row_id,
         form.email,
         form.name,
         Utc::now()
     )
-    .execute(db_conn.get_ref())
-    .instrument(query_span)
+    .execute(db_cp)
     .await
-    {
-        Ok(_) => {
-            tracing::info!("req_id {} - New subscriber saved.", id);
-            HttpResponse::Ok().finish()
-        }
-        Err(e) => {
-            let dbe = e.as_database_error().unwrap();
-            let dbe_code = dbe.code().unwrap_or_default();
-            tracing::error!(
-                "req_id {} - Failed to execute query: {:?} (code={}).",
-                id,
-                dbe,
-                dbe_code
-            );
-            match dbe_code.into_owned().as_str() {
-                "23505" => HttpResponse::Conflict().finish(),
-                _ => HttpResponse::InternalServerError().finish(),
-            }
-        }
-    }
+    .map_err(|e| {
+        let dbe = e.as_database_error().unwrap();
+        let dbe_code = dbe.code().unwrap_or_default();
+        tracing::error!("Failed to execute query: {:?} (code={}).", dbe, dbe_code);
+        e
+        // TODO: Use an App related error in case of a Db error.
+        //   match dbe_code.into_owned().as_str() {
+        //     "23505" => HttpResponse::Conflict().finish(),
+        //     _ => HttpResponse::InternalServerError().finish(),
+        //  }
+    })?;
+    Ok(())
 }

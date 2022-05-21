@@ -13,6 +13,8 @@ The following software needs to be installed locally:
 
 Note that `.env` file contains a DATABASE_URL variable that is used by `sqlx::query!` macros for performing compile time checks to validate the queries. Therefore, if you change something in `scripts/init_db.sh` script, make sure to reflect those changes in this file as well.
 
+While developing, `cargo-udeps` (installed using `cargo install cargo-udeps`) was used to detect unused dependencies, by running `cargo +nightly udeps`.
+
 <br/>
 
 ### Run

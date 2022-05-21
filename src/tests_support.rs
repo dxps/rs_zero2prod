@@ -1,4 +1,8 @@
-use crate::config::DatabaseSettings;
+use crate::{
+    config::DatabaseSettings,
+    telemetry::{get_tracing_subscriber, init_tracing_subscriber},
+};
+use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::{io::Error, net::TcpListener};
 use uuid::Uuid;
@@ -11,9 +15,25 @@ pub struct TestApp {
     server_handle: tokio::task::JoinHandle<Result<(), Error>>,
 }
 
+static TRACING: Lazy<()> = Lazy::new(|| {
+    let default_filter_level = "info".to_string();
+    let subscriber_name = "test".to_string();
+    if std::env::var("TEST_LOG").is_ok() {
+        let ts = get_tracing_subscriber(subscriber_name, default_filter_level, std::io::stdout);
+        init_tracing_subscriber(ts);
+    } else {
+        // If "TEST_LOG" is not set, we send all logs into the void using `std::io::sink`.
+        let ts = get_tracing_subscriber(subscriber_name, default_filter_level, std::io::sink);
+        init_tracing_subscriber(ts);
+    };
+});
+
 impl TestApp {
     /// It spins up an instance of `TestApp` (incl. web server and database conn pool).
     pub async fn startup() -> Self {
+        // This initialization is invoked once.
+        Lazy::force(&TRACING);
+
         // Load the config and init db connection. Panic if this fails.
         let mut app_config = crate::config::get_config().expect("Failed to load the app config.");
         // Each spawned test app uses its own (unique per execution) database.

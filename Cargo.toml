@@ -25,10 +25,12 @@ uuid = { version = "1.0.0", features = ["v4"] }
 # This has to be here instead of just to `dev-dependencies` as it's needed in `tests_support` module.
 tokio = { version = "1.18.2", features = [ "macros", "rt-multi-thread" ] }
 
-env_logger = "0.9"
-log = "0.4"
+tracing = { version = "0.1.34", features = [ "log" ] }
+tracing-subscriber = { version = "0.3.11", features = [ "registry", "env-filter" ] }
+tracing-bunyan-formatter = "0.3.2"
+tracing-log = "0.1.3"
 
-tracing = { version = "0.1", features = [ "log" ] }
+once_cell = "1.11.0"
 
 ## Using table-like toml syntax to avoid a super-long line.
 [dependencies.sqlx]
@@ -47,3 +49,6 @@ version = "0.5.13"
 [dev-dependencies]
 actix-rt = "2.7.0"
 reqwest = "0.11.10"
+
+[package.metadata.cargo-udeps.ignore]
+normal = [ "openssl" ]
