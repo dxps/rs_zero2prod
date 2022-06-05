@@ -1,0 +1,11 @@
+# -------------------------------------------------------------------------------------------
+# This file specifies which files are not needed to build the Docker image.
+# Thus, it reduces the size of the Docker build context (not in scope for COPY instructions),
+# speeding up the build stage and reducing the size of its final image.
+# -------------------------------------------------------------------------------------------
+
+.env
+target/
+tests/
+Dockerfile
+scripts/

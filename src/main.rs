@@ -1,5 +1,5 @@
-use std::net::TcpListener;
 use secrecy::ExposeSecret;
+use std::net::TcpListener;
 
 use rs_zero2prod::{
     config::get_config,
@@ -17,11 +17,10 @@ async fn main() -> std::io::Result<()> {
     // Load the config and init db connection. Panic if this fails.
     let app_cfg = get_config().expect("Failed to load the app config.");
 
-    let db_conn_pool = PgPool::connect(&app_cfg.database.connection_string().expose_secret())
-        .await
+    let db_conn_pool = PgPool::connect_lazy(&app_cfg.database.connection_string().expose_secret())
         .expect("Failed to connect to Postgres");
 
-    let endpoint = format!("127.0.0.1:{}", app_cfg.http_port);
+    let endpoint = format!("{}:{}", app_cfg.http.host, app_cfg.http.port);
     let listener =
         TcpListener::bind(&endpoint).expect(&format!("Failed to listen on {}.", endpoint));
 

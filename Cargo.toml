@@ -44,6 +44,7 @@ features = [
   "uuid", # Add support for mapping SQL UUIDs to the Uuid type from `uuid` create.
   "chrono", # Add support for mapping SQL `timestamptz` to the `DateTime<T>` type of `chrono` crate.
   "migrate", # Have access to the features used by `sqlx-cli` to manage migrations, useful for our test suite.
+  "offline" # Support offline mode, needed during the build of the Docker image.
 ]
 version = "0.5.13"
 
