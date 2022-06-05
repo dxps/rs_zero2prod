@@ -1,11 +1,30 @@
 ## -------------------------------------------
-##  The Build Stage
+##  The cargo-chef recipe Stage
 ## -------------------------------------------
 
-FROM rust:1.61.0 AS build
+FROM lukemathwalker/cargo-chef:latest-rust-1.61.0 as chef
 
 WORKDIR /app
 RUN apt update && apt install lld clang -y
+
+FROM chef as planner
+COPY . .
+# Compute a lock-like file
+RUN cargo chef prepare --recipe-path recipe.json
+
+## -------------------------------------------
+##  The Dependencies Build Stage
+## -------------------------------------------
+
+FROM chef as build
+COPY --from=planner /app/recipe.json recipe.json
+# Build the project dependencies, not the application!
+RUN cargo chef cook --release --recipe-path recipe.json
+
+## -------------------------------------------
+##  The Application Build Stage
+## -------------------------------------------
+
 COPY . .
 ENV SQLX_OFFLINE true
 RUN cargo build --release
