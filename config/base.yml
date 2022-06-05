@@ -5,4 +5,5 @@ database:
     password: "postgres"
     name: "ztp_newsletter"
 
-http_port: 8000
+http:
+    port: 8000

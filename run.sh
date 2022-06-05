@@ -1,4 +1,4 @@
 #!/bin/sh
 
-cargo run
+APP_ENVIRONMENT=local cargo run
 
