@@ -1,4 +1,4 @@
-## ZeroToProduction Rust
+## Zero To Production in Rust
 
 <br/>
 
@@ -39,3 +39,15 @@ Note that if you want to log something in the tests, to see the output you need 
 This works well with `print` and `println!` approach. If you want to use `log!` macro, see details [here](https://github.com/rust-lang/log/issues/106).
 
 <br/>
+
+### Docker
+
+Building the Docker image is done using the provided `./build_docker.sh` script.
+During `cargo build --release`, `sqlx` should run offline, and that's the reason for having `sqlx-data.json` file. This is (re)created using `cargo sqlx prepare -- --lib`. Of course, later it needs to be kept in sync with the database and query changes.
+
+After `build_docker.sh` runs successfully:
+- you can use `docker images rs_zero2prod` to see its size
+- use it to run the app as Docker container using `./run_docker.sh` script
+
+<br/>
+

@@ -42,9 +42,13 @@ async fn insert_subscription(form: &FormData, db_cp: &PgPool) -> Result<(), sqlx
     .execute(db_cp)
     .await
     .map_err(|e| {
-        let dbe = e.as_database_error().unwrap();
-        let dbe_code = dbe.code().unwrap_or_default();
-        tracing::error!("Failed to execute query: {:?} (code={}).", dbe, dbe_code);
+        match e.as_database_error() {
+            Some(dbe) => {
+                let dbe_code = dbe.code().unwrap_or_default();
+                tracing::error!("Failed to execute query: {:?} (code={}).", e, dbe_code);
+            }
+            None => {}
+        }
         e
         // TODO: Use an App related error in case of a Db error.
         //   match dbe_code.into_owned().as_str() {
