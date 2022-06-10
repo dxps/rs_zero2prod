@@ -34,7 +34,7 @@ impl DatabaseSettings {
         ))
     }
 
-    /// Such string allows connecting to the Postgres instance, not to a specific database.
+    /// Such string allows connecting to the Postgres instance, without specifying a database.
     pub fn connection_string_without_db(&self) -> Secret<String> {
         Secret::new(format!(
             "postgres://{}:{}@{}:{}",

@@ -4,6 +4,9 @@
 
 array_width = 80
 
+## Not stable.
+## brace_style = "AlwaysNextLine"
+
 edition = "2021"
 
 imports_indent = "Visual"
