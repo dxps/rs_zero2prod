@@ -5,6 +5,8 @@ use chrono::Utc;
 use sqlx::{types::Uuid as SqlxUuid, PgPool};
 use uuid::Uuid;
 
+use crate::domain::{NewSubscriber, SubscriberName};
+
 #[derive(serde::Deserialize)]
 pub struct FormData {
     email: String,
@@ -20,7 +22,11 @@ pub struct FormData {
 )]
 pub async fn subscribe(form: web::Form<FormData>, db_conn: web::Data<PgPool>) -> HttpResponse {
     //
-    match insert_subscription(&form, &db_conn).await {
+    let new_subscriber = NewSubscriber {
+        email: form.0.email,
+        name: SubscriberName::parse(form.0.name),
+    };
+    match insert_subscriber(&new_subscriber, &db_conn).await {
         Ok(_) => HttpResponse::Ok().finish(),
         Err(_) => {
             // TODO: Better HTTP response in case of a App/Db error.
@@ -29,14 +35,17 @@ pub async fn subscribe(form: web::Form<FormData>, db_conn: web::Data<PgPool>) ->
     }
 }
 
-#[tracing::instrument(name = "Persisting new subscription", skip(form, db_cp))]
-async fn insert_subscription(form: &FormData, db_cp: &PgPool) -> Result<(), sqlx::Error> {
+#[tracing::instrument(name = "Persisting new subscriber", skip(new_subscriber, db_cp))]
+async fn insert_subscriber(
+    new_subscriber: &NewSubscriber,
+    db_cp: &PgPool,
+) -> Result<(), sqlx::Error> {
     let row_id = SqlxUuid::from_str(Uuid::new_v4().to_string().as_str()).unwrap();
     sqlx::query!(
         r#"INSERT INTO subscriptions (id, email, name, subscribed_at) VALUES ($1, $2, $3, $4)"#,
         row_id,
-        form.email,
-        form.name,
+        new_subscriber.email,
+        new_subscriber.name.inner_ref(),
         Utc::now()
     )
     .execute(db_cp)
