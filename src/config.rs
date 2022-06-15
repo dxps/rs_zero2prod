@@ -81,7 +81,6 @@ pub fn get_config() -> Result<AppConfig, config::ConfigError> {
     let base_dir = std::env::current_dir().expect("Failed to determine the current directory");
     let config_dir = base_dir.join("config");
 
-    // let mut cfg = config::Config::default();
     let base_src =
         config::File::with_name(config_dir.join("base").to_str().unwrap()).required(true);
 

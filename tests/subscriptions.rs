@@ -68,3 +68,37 @@ async fn subscribe_returns_400_when_missing_data() {
         );
     }
 }
+
+#[actix_rt::test]
+async fn subscribe_returns_400_when_fields_are_present_but_empty() {
+    // Setup.
+    let mut app = rs_zero2prod::tests_support::TestApp::startup().await;
+    let client = reqwest::Client::new();
+
+    let test_cases = vec![
+        ("name=&email=joe@black.com", "empty name"),
+        ("name=Joe%20Black&email=", "empty email"),
+        ("name=Joe%20Black&email=not-an-email", "invalid email"),
+    ];
+
+    for (body, case_desc) in test_cases {
+        // Act
+        let response = client
+            .post(format!("{}/subscriptions", &app.http_endpoint))
+            .header("content-type", "application/x-www-form-urlencoded")
+            .body(body)
+            .send()
+            .await
+            .expect("Failed to post request");
+
+        // Evaluate
+        assert_eq!(
+            400,
+            response.status().as_u16(),
+            "The API did not fail with 400 when request body has {}",
+            case_desc
+        );
+    }
+
+    app.shutdown().await;
+}
