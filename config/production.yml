@@ -1,2 +1,6 @@
+email_client:
+    api_base_url: "https://api.postmarkapp.com"
+    sender_email: "ztp@gmail.com"
+
 http:
     host: "0.0.0.0"

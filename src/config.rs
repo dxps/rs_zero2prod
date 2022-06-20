@@ -1,9 +1,12 @@
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 
+use crate::domain::SubscriberEmail;
+
 #[derive(Deserialize)]
 pub struct AppConfig {
     pub database: DatabaseSettings,
+    pub email_client: EmailClientSettings,
     pub http: HttpSettings,
 }
 
@@ -14,11 +17,6 @@ pub struct DatabaseSettings {
     pub host: String,
     pub port: u16,
     pub name: String,
-}
-#[derive(Deserialize)]
-pub struct HttpSettings {
-    pub host: String,
-    pub port: u16,
 }
 
 impl DatabaseSettings {
@@ -44,6 +42,24 @@ impl DatabaseSettings {
             self.port
         ))
     }
+}
+
+#[derive(Deserialize)]
+pub struct EmailClientSettings {
+    pub api_base_url: String,
+    pub sender_email: String,
+}
+
+impl EmailClientSettings {
+    pub fn sender(&self) -> Result<SubscriberEmail, String> {
+        SubscriberEmail::parse(self.sender_email.clone())
+    }
+}
+
+#[derive(Deserialize)]
+pub struct HttpSettings {
+    pub host: String,
+    pub port: u16,
 }
 
 /// The runtime environment.

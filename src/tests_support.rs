@@ -1,11 +1,12 @@
 use crate::{
     config::DatabaseSettings,
+    email_client::EmailClient,
     telemetry::{get_tracing_subscriber, init_tracing_subscriber},
 };
 use once_cell::sync::Lazy;
+use secrecy::ExposeSecret;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::{io::Error, net::TcpListener};
-use secrecy::ExposeSecret;
 use uuid::Uuid;
 
 pub struct TestApp {
@@ -41,14 +42,19 @@ impl TestApp {
         let db_name = Uuid::new_v4().to_string();
         app_config.database.name = db_name.clone();
         let (db_conn, db_pool) = Self::configure_database(&app_config.database).await;
+        let sender_email = app_config
+            .email_client
+            .sender()
+            .expect("Invalid sender email address");
+        let email_client = EmailClient::new(app_config.email_client.api_base_url, sender_email);
 
         // Port value of 0 (in "{ip/name}:0") will trigger an OS scan for
         // an available port that can be used for binding (listening to).
         let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
         let port = listener.local_addr().unwrap().port();
 
-        let server =
-            crate::startup::run(listener, db_pool.clone()).expect("Failed to bind address");
+        let server = crate::startup::run(listener, db_pool.clone(), email_client)
+            .expect("Failed to bind address");
         let server_handle = tokio::spawn(server);
 
         Self {
@@ -62,9 +68,10 @@ impl TestApp {
 
     async fn configure_database(config: &DatabaseSettings) -> (PgConnection, PgPool) {
         // Create the database.
-        let mut conn = PgConnection::connect(&config.connection_string_without_db().expose_secret())
-            .await
-            .expect("Failed to connect to Postgres");
+        let mut conn =
+            PgConnection::connect(&config.connection_string_without_db().expose_secret())
+                .await
+                .expect("Failed to connect to Postgres");
         conn.execute(format!(r#"CREATE DATABASE "{}";"#, config.name).as_str())
             .await
             .expect("Failed to create database");
